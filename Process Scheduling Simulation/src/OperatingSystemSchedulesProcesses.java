@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
 
 public class OperatingSystemSchedulesProcesses {
@@ -55,29 +57,31 @@ public class OperatingSystemSchedulesProcesses {
 		}
 	}
 	
-	// Reads processes from a file and returns a list of Process objects.
-	static List<Process> readProcesses(String filename) {
-		List<Process> processes = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-			// Skip header line
-			String line = br.readLine();
-			while ((line = br.readLine()) != null) {
-				if (line.trim().isEmpty())
-					continue;
-				String[] parts = line.trim().split("\\s+");
-				if (parts.length >= 4) {
-					int pid = Integer.parseInt(parts[0]);
-					int arrival = Integer.parseInt(parts[1]);
-					int burst = Integer.parseInt(parts[2]);
-					int priority = Integer.parseInt(parts[3]);
-					processes.add(new Process(pid, arrival, burst, priority));
+	    // Reads processes from a file and returns a list of Process objects.
+		static List<Process> readProcesses(String filename) {
+			List<Process> processes = new ArrayList<>();
+			Path filePath = Paths.get(filename);
+			System.out.println("Reading file from: " + filePath.toAbsolutePath()); // Print the absolute path for debugging
+			try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
+				// Skip header line
+				String line = br.readLine();
+				while ((line = br.readLine()) != null) {
+					if (line.trim().isEmpty())
+						continue;
+					String[] parts = line.trim().split("\\s+");
+					if (parts.length >= 4) {
+						int pid = Integer.parseInt(parts[0]);
+						int arrival = Integer.parseInt(parts[1]);
+						int burst = Integer.parseInt(parts[2]);
+						int priority = Integer.parseInt(parts[3]);
+						processes.add(new Process(pid, arrival, burst, priority));
+					}
 				}
+			} catch (IOException e) {
+				System.out.println("Error: File " + filename + " not found.");
 			}
-		} catch (IOException e) {
-			System.out.println("Error: File " + filename + " not found.");
+			return processes;
 		}
-		return processes;
-	}
 	
 
 
@@ -497,37 +501,38 @@ public class OperatingSystemSchedulesProcesses {
 	
 
 
-	public static void main(String[] args) {
-		// Scheduling Simulation
-		String filename = "processes.txt";
-		List<Process> processes = readProcesses(filename);
-		if (processes.isEmpty()) {
-			System.out.println("No processes to schedule. Please check your processes.txt file.");
-		} else {
-			// Sort by arrival time
-			processes.sort(Comparator.comparingInt(p -> p.arrival));
-			fcfsScheduling(processes);
-			System.out.println("\n\n");
-			sjfScheduling(processes);
-			System.out.println("\n\n");
-			roundRobinScheduling(processes, 4);
-			System.out.println("\n\n");
-			priorityScheduling(processes);
-		}
-		
-		// Memory Allocation Simulation
-		System.out.println("\n\n");
-		simulateMemoryAllocation("first_fit");
-		simulateMemoryAllocation("best_fit");
-		simulateMemoryAllocation("worst_fit");
-		
-		// Paging Simulation
-		int[] pageRefs = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2};
-		int numFrames = 3;
-		int fifoFaults = simulatePagingFIFO(pageRefs, numFrames);
-		int lruFaults = simulatePagingLRU(pageRefs, numFrames);
-		System.out.println("\nPaging Simulation:");
-		System.out.println("FIFO Page Faults: " + fifoFaults);
-		System.out.println("LRU Page Faults: " + lruFaults);
-	}
+    public static void main(String[] args) {
+        // Scheduling Simulation
+        Path currentRelativePath = Paths.get("");
+        String filename = currentRelativePath.toAbsolutePath().toString() + "\\processes.txt"; // Use relative path
+        List<Process> processes = readProcesses(filename);
+        if (processes.isEmpty()) {
+            System.out.println("No processes to schedule. Please check your processes.txt file.");
+        } else {
+            // Sort by arrival time
+            processes.sort(Comparator.comparingInt(p -> p.arrival));
+            fcfsScheduling(processes);
+            System.out.println("\n\n");
+            sjfScheduling(processes);
+            System.out.println("\n\n");
+            roundRobinScheduling(processes, 4);
+            System.out.println("\n\n");
+            priorityScheduling(processes);
+        }
+
+        // Memory Allocation Simulation
+        System.out.println("\n\n");
+        simulateMemoryAllocation("first_fit");
+        simulateMemoryAllocation("best_fit");
+        simulateMemoryAllocation("worst_fit");
+
+        // Paging Simulation
+        int[] pageRefs = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2};
+        int numFrames = 3;
+        int fifoFaults = simulatePagingFIFO(pageRefs, numFrames);
+        int lruFaults = simulatePagingLRU(pageRefs, numFrames);
+        System.out.println("\nPaging Simulation:");
+        System.out.println("FIFO Page Faults: " + fifoFaults);
+        System.out.println("LRU Page Faults: " + lruFaults);
+    }
 }
